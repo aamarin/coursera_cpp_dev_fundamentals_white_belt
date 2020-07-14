@@ -50,7 +50,9 @@ class Person {
 							   map<int, pair<bool, bool>, greater<int>>::iterator& it_yr_to_name_call_bool_map) {
 		// Do nothing if the input isn't valid
 		if(it_yr_to_name_map == yr_to_name_map.end() && it_yr_to_name_call_bool_map == yr_to_name_call_bool_map.end()) {
+#ifdef DEBUG_ON
 			cout << "try_change_first_name: Invalid input, exiting...";
+#endif
 			return false;
 		}
 
@@ -71,7 +73,10 @@ class Person {
 #endif
 
 	 if(!prev_first_name_bool || prev_first_name_str.empty()) {
+
+#ifdef DEBUG_ON
 		 cout << "try_change_first_name: Parent string is empty or ChangeFirstName not called before" << endl;
+#endif
 		 prev_first_name_str = first_name_str;
 	 }
 
@@ -90,7 +95,9 @@ class Person {
 			   	   	   	      map<int, pair<bool, bool>, greater<int>>::iterator& it_yr_to_name_call_bool_map) {
 		// Do nothing if the input isn't valid
 		if(it_yr_to_name_map == yr_to_name_map.end() && it_yr_to_name_call_bool_map == yr_to_name_call_bool_map.end()) {
+#ifdef DEBUG_ON
 			cout << "try_change_last_name: Invalid input, exiting...";
+#endif
 		   return false;
 		}
 
@@ -109,7 +116,9 @@ class Person {
 	cout << prev_year << " : prev first name function called? = " << prev_first_name_bool << ", prev last name function called? = " << prev_last_name_bool << endl;
 #endif
 		if(!prev_last_name_bool || prev_last_name_str.empty()) {
+#ifdef DEBUG_ON
 			cout << "try_change_last_name: " << year << " Parent string is empty or ChangeLastName not called before" << endl;
+#endif
 			prev_last_name_str = last_name_str;
 		}
 
@@ -136,25 +145,26 @@ public:
 	   // iterator to next smallest key (year)
 	   auto it_yr_to_name_map = yr_to_name_map.upper_bound(year);
 	   auto it_yr_to_name_call_bool_map = yr_to_name_call_bool_map.upper_bound(year);
+#ifdef DEBUG_ON
 	   cout << "first try_change_first_name()" << endl;
+#endif
 
-	   if(!try_change_first_name(it_yr_to_name_map, it_yr_to_name_call_bool_map)) {
-		   cout << "try_change_first_name() failed, skipping" << endl;
-		   return;
-	   }
-
-	   it_yr_to_name_map = prev(it_yr_to_name_map);
-	   it_yr_to_name_call_bool_map = prev(it_yr_to_name_call_bool_map);
-
-	   if(it_yr_to_name_map != yr_to_name_map.begin() && it_yr_to_name_call_bool_map != yr_to_name_call_bool_map.begin()) {
-		   cout << "Second try_change_first_name()" << endl;
-//		   it_yr_to_name_map = prev(it_yr_to_name_map);
-//		   it_yr_to_name_call_bool_map = prev(it_yr_to_name_call_bool_map);
-		   if(!try_change_first_name(it_yr_to_name_map, it_yr_to_name_call_bool_map)) {
-			   cout << "try_change_first_name() part 2 failed, skipping" << endl;
-			   return;
+	   bool did_try_change_fail = false;
+	   do {
+		   did_try_change_fail = try_change_first_name(it_yr_to_name_map, it_yr_to_name_call_bool_map);
+		   if(!did_try_change_fail) {
+#ifdef DEBUG_ON
+			   cout << "try_change_first_name() failed" << endl;
+#endif
+			   break;
 		   }
-	   }
+
+		   it_yr_to_name_map = prev(it_yr_to_name_map);
+		   it_yr_to_name_call_bool_map = prev(it_yr_to_name_call_bool_map);
+
+	   } while(it_yr_to_name_map != yr_to_name_map.begin() &&
+			   it_yr_to_name_call_bool_map != yr_to_name_call_bool_map.begin() &&
+			   did_try_change_fail);
    }
 
    void ChangeLastName (int year, const string& last_name) {
@@ -167,26 +177,27 @@ public:
 	   // iterator to next smallest key (year)
 	   auto it_yr_to_name_map = yr_to_name_map.upper_bound(year);
 	   auto it_yr_to_name_call_bool_map = yr_to_name_call_bool_map.upper_bound(year);
+
+#ifdef DEBUG_ON
 	   cout << "first try_change_lst_name()" << endl;
+#endif
 
-	   if(!try_change_last_name(it_yr_to_name_map, it_yr_to_name_call_bool_map)) {
-		   cout << "try_change_last_name() failed, skipping" << endl;
-		   return;
-	   }
-
-	   it_yr_to_name_map = prev(it_yr_to_name_map);
-	   it_yr_to_name_call_bool_map = prev(it_yr_to_name_call_bool_map);
-
-	   if(it_yr_to_name_map != yr_to_name_map.begin() && it_yr_to_name_call_bool_map != yr_to_name_call_bool_map.begin()) {
-		   cout << "Second try_change_last_name()" << endl;
-//		   it_yr_to_name_map = prev(it_yr_to_name_map);
-//		   it_yr_to_name_call_bool_map = prev(it_yr_to_name_call_bool_map);
-		   if(!try_change_last_name(it_yr_to_name_map, it_yr_to_name_call_bool_map)) {
-			   cout << "try_change_last_name() part 2 failed, skipping" << endl;
-			   return;
+	   bool did_try_change_fail = false;
+	   do {
+		   did_try_change_fail = try_change_last_name(it_yr_to_name_map, it_yr_to_name_call_bool_map);
+		   if(!did_try_change_fail) {
+#ifdef DEBUG_ON
+			   cout << "try_change_last_name() failed" << endl;
+#endif
+			   break;
 		   }
 
-	   }
+		   it_yr_to_name_map = prev(it_yr_to_name_map);
+		   it_yr_to_name_call_bool_map = prev(it_yr_to_name_call_bool_map);
+
+	   } while(it_yr_to_name_map != yr_to_name_map.begin() &&
+			   it_yr_to_name_call_bool_map != yr_to_name_call_bool_map.begin() &&
+			   did_try_change_fail);
    }
 
    string GetFullName (int year) {
@@ -219,60 +230,62 @@ private:
 };
 
 int main() {
-	Person person;
+//	{
+//		Person person;
+//
+//		person.ChangeFirstName(1965, "Polina");
+//		person.ChangeLastName(1967, "Sergeeva");
+//
+//		assert("Incognito" == person.GetFullName(1900));
+//		assert("Polina with unknown last name" == person.GetFullName(1965));
+//		cout << person.GetFullName(1990) << endl;
+//		assert("Polina Sergeeva" == person.GetFullName(1990));
+//
+//		person.ChangeFirstName(1970, "Appolinaria");
+//
+//		assert("Polina Sergeeva" == person.GetFullName(1969));
+//		assert("Appolinaria Sergeeva" == person.GetFullName(1970));
+//
+//		person.ChangeLastName(1968, "Volkova");
+//
+//		assert("Polina Volkova" == person.GetFullName(1969));
+//		assert("Appolinaria Volkova" == person.GetFullName(1970));
+//
+//	}
 
-	assert("Incognito" == person.GetFullName(2000));
+	{
+		Person person;
 
-	person.ChangeLastName(1968, "1968_2nd");
-	person.ChangeLastName(1967, "1967_2nd");
-	person.ChangeLastName(1965, "1965_2nd");
-	person.ChangeLastName(1966, "1966_2nd");
+		assert("Incognito" == person.GetFullName(2000));
 
-	assert("Incognito" == person.GetFullName(1900));
-	assert("Incognito" == person.GetFullName(1920));
-	assert("Incognito" == person.GetFullName(1950));
-	assert("1965_2nd with unknown first name" == person.GetFullName(1965));
-	assert("1966_2nd with unknown first name" == person.GetFullName(1966));
-	assert("1967_2nd with unknown first name" == person.GetFullName(1967));
-	assert("1968_2nd with unknown first name" == person.GetFullName(1968));
+		person.ChangeLastName(1968, "1968_2nd");
+		person.ChangeLastName(1967, "1967_2nd");
+		person.ChangeLastName(1965, "1965_2nd");
+		person.ChangeLastName(1966, "1966_2nd");
 
-	person.ChangeFirstName(1920, "1920_1st");
-	person.ChangeFirstName(1900, "1900_1st");
-	person.ChangeFirstName(1965, "1965_1st");
-	person.ChangeFirstName(1950, "1950_1st");
+		assert("Incognito" == person.GetFullName(1900));
+		assert("Incognito" == person.GetFullName(1920));
+		assert("Incognito" == person.GetFullName(1950));
+		assert("1965_2nd with unknown first name" == person.GetFullName(1965));
+		assert("1966_2nd with unknown first name" == person.GetFullName(1966));
+		assert("1967_2nd with unknown first name" == person.GetFullName(1967));
+		assert("1968_2nd with unknown first name" == person.GetFullName(1968));
 
-	assert("1900_1st with unknown last name" == person.GetFullName(1900));
-	assert("1920_1st with unknown last name" == person.GetFullName(1920));
-	assert("1950_1st with unknown last name" == person.GetFullName(1950));
-	assert("1965_1st 1965_2nd" == person.GetFullName(1965));
-	assert("1965_1st 1966_2nd" == person.GetFullName(1966));
-	cout <<  person.GetFullName(1967) << endl;
+		person.ChangeFirstName(1920, "1920_1st");
+		person.ChangeFirstName(1900, "1900_1st");
+		person.ChangeFirstName(1965, "1965_1st");
+		person.ChangeFirstName(1950, "1950_1st");
 
-	assert("1965_1st 1967_2nd" == person.GetFullName(1967));
-	assert("1965_1st 1968_2nd" == person.GetFullName(1968));
-
+		assert("1900_1st with unknown last name" == person.GetFullName(1900));
+		assert("1920_1st with unknown last name" == person.GetFullName(1920));
+		assert("1950_1st with unknown last name" == person.GetFullName(1950));
+		assert("1965_1st 1965_2nd" == person.GetFullName(1965));
+		assert("1965_1st 1966_2nd" == person.GetFullName(1966));
+		assert("1965_1st 1967_2nd" == person.GetFullName(1967));
+		assert("1965_1st 1968_2nd" == person.GetFullName(1968));
+	}
 	return 0;
 }
 
-//int main() {
-//  Person person;
-//
-//  person.ChangeFirstName(1965, "Polina");
-//  person.ChangeLastName(1967, "Sergeeva");
-//  for (int year : {1900, 1965, 1990}) {
-//    cout << person.GetFullName(year) << endl;
-//  }
-//
-//  person.ChangeFirstName(1970, "Appolinaria");
-//  for (int year : {1969, 1970}) {
-//    cout << person.GetFullName(year) << endl;
-//  }
-//
-//  person.ChangeLastName(1968, "Volkova");
-//  for (int year : {1969, 1970}) {
-//    cout << person.GetFullName(year) << endl;
-//  }
-//
-//  return 0;
-//}
+
 
