@@ -12,51 +12,37 @@
 #include <utility>
 #include <iterator>
 
-#define DEBUG_ON
-
 using namespace std;
+
+
+#define DEBUG_ON
 
 class Person {
 
-	void addFirstNameToMaps(int year, const string& first_name) {
-		   auto& [fname_bool, lname_bool] = yr_to_name_call_bool_map[year];
+	auto addNameToMap(const int year, const string& name, const bool is_first_name) {
+	   auto& [fname_bool, lname_bool] = yr_to_name_call_bool_map[year];
+	   auto& [fname_str, lname_str] = yr_to_name_map[year];
+
+	   if(is_first_name) {
 		   fname_bool = true;
-
-		   auto& [fname_str, lname_str] = yr_to_name_map[year];
-		   fname_str = first_name;
-
-#ifdef DEBUG_ON
-		   cout << "addFirstNameToMaps" << endl;
-		   cout << year << " : first name = " << fname_str << ", last name = " << lname_str << endl;
-		   cout << fname_bool << " " << lname_bool << endl;
-#endif
-	}
-
-	void addLastNameToMaps(int year, const string& last_name) {
-		   auto& [fname_bool, lname_bool] = yr_to_name_call_bool_map[year];
+		   fname_str = name;
+	   }
+	   else {
 		   lname_bool = true;
-
-		   auto& [fname_str, lname_str] = yr_to_name_map[year];
-		   lname_str = last_name;
+		   lname_str = name;
+	   }
 
 #ifdef DEBUG_ON
-		   cout << "addLastNameToMaps" << endl;
-		   cout << year << " : first name = " << fname_str << ", last name = " << lname_str << endl;
-		   cout << fname_bool << " " << lname_bool << endl;
+	   cout << "Adding" << (is_first_name ? "first name" : "last name ") << name << "to map" << endl;
+	   cout << year << " : first name = " << fname_str << ", last name = " << lname_str << endl;
+	   cout << "Has called ChangeFirstName before " << (fname_bool ? "Yes" : "No") << endl;
+	   cout << "Has called ChangeLasttName before " << (lname_bool ? "Yes" : "No") << endl;
 #endif
+	   return make_pair(yr_to_name_call_bool_map.begin(), yr_to_name_call_bool_map.begin());
 	}
 
-	bool try_change_first_name(map<int, pair<string,string>, greater<int>>::iterator& it_yr_to_name_map,
-							   map<int, pair<bool, bool>, greater<int>>::iterator& it_yr_to_name_call_bool_map) {
-		// Do nothing if the input isn't valid
-		if(it_yr_to_name_map == yr_to_name_map.end() && it_yr_to_name_call_bool_map == yr_to_name_call_bool_map.end()) {
-#ifdef DEBUG_ON
-			cout << "try_change_first_name: Invalid input, exiting...";
-#endif
-			return false;
-		}
-
-		// auto [first_name_bool, last_name_bool] = it_yr_to_name_call_bool_map->second;
+	void try_change_debug_trace(map<int, pair<string,string>, greater<int>>::iterator& it_yr_to_name_map,
+			   	   	   	   	    map<int, pair<bool, bool>, greater<int>>::iterator& it_yr_to_name_call_bool_map) {
 		auto year = it_yr_to_name_map->first;
 		auto& [first_name_str, last_name_str] = it_yr_to_name_map->second;
 		auto [first_name_bool, last_name_bool] = it_yr_to_name_call_bool_map->second;
@@ -64,12 +50,33 @@ class Person {
 		auto& [prev_first_name_str, prev_last_name_str] = prev(it_yr_to_name_map)->second;
 		auto [prev_first_name_bool, prev_last_name_bool] = prev(it_yr_to_name_call_bool_map)->second;
 
+		cout << year << " : first name = " << first_name_str << ", last name = " << last_name_str << endl;
+		cout << year << " : first name function called? = " << first_name_bool << ", last name function called? = " << last_name_bool << endl;
+		cout << prev_year << " : prev first name = " << prev_first_name_str << ", prev last name = " << prev_last_name_str << endl;
+		cout << prev_year << " : prev first name function called? = " << prev_first_name_bool << ", prev last name function called? = " << prev_last_name_bool << endl;
+	}
+
+	bool try_change_first_name(map<int, pair<string,string>, greater<int>>::iterator& it_yr_to_name_map,
+							   map<int, pair<bool, bool>, greater<int>>::iterator& it_yr_to_name_call_bool_map) {
+		// Do nothing if the input isn't valid
+		if(it_yr_to_name_map == yr_to_name_map.end() && it_yr_to_name_call_bool_map == yr_to_name_call_bool_map.end()) {
+#ifdef DEBUG_ON
+			cout << __FUNCTION__ << ": Invalid input, exiting...";
+#endif
+			return false;
+		}
+
+//		 auto [first_name_bool, last_name_bool] = it_yr_to_name_call_bool_map->second;
+//		auto year = it_yr_to_name_map->first;
+		auto& [first_name_str, last_name_str] = it_yr_to_name_map->second;
+//		auto [first_name_bool, last_name_bool] = it_yr_to_name_call_bool_map->second;
+//		auto prev_year = prev(it_yr_to_name_map)->first;
+		auto& [prev_first_name_str, prev_last_name_str] = prev(it_yr_to_name_map)->second;
+		auto [prev_first_name_bool, prev_last_name_bool] = prev(it_yr_to_name_call_bool_map)->second;
+
 #ifdef DEBUG_ON
 	cout << "Before: try_change_first_name" << endl;
-	cout << year << " : first name = " << first_name_str << ", last name = " << last_name_str << endl;
-	cout << year << " : first name function called? = " << first_name_bool << ", last name function called? = " << last_name_bool << endl;
-	cout << prev_year << " : prev first name = " << prev_first_name_str << ", prev last name = " << prev_last_name_str << endl;
-	cout << prev_year << " : prev first name function called? = " << prev_first_name_bool << ", prev last name function called? = " << prev_last_name_bool << endl;
+	try_change_debug_trace(it_yr_to_name_map, it_yr_to_name_call_bool_map);
 #endif
 
 	 if(!prev_first_name_bool || prev_first_name_str.empty()) {
@@ -82,10 +89,8 @@ class Person {
 
 #ifdef DEBUG_ON
 	cout << "After: try_change_first_name" << endl;
-	cout << year << " : first name = " << first_name_str << ", last name = " << last_name_str << endl;
-	cout << year << " : first name function called? = " << first_name_bool << ", last name function called? = " << last_name_bool << endl;
-	cout << prev_year << " : prev first name = " << prev_first_name_str << ", prev last name = " << prev_last_name_str << endl;
-	cout << prev_year << " : prev first name function called? = " << prev_first_name_bool << ", prev last name function called? = " << prev_last_name_bool << endl;
+	try_change_debug_trace(it_yr_to_name_map, it_yr_to_name_call_bool_map);
+
 #endif
 
 	 return true;
@@ -96,38 +101,30 @@ class Person {
 		// Do nothing if the input isn't valid
 		if(it_yr_to_name_map == yr_to_name_map.end() && it_yr_to_name_call_bool_map == yr_to_name_call_bool_map.end()) {
 #ifdef DEBUG_ON
-			cout << "try_change_last_name: Invalid input, exiting...";
+			cout <<"Before state of " <<  __FUNCTION__ << ": Invalid input, exiting...";
 #endif
 		   return false;
 		}
 
-		auto year = it_yr_to_name_call_bool_map->first;
+		auto year = it_yr_to_name_map->first;
 		auto& [first_name_str, last_name_str] = it_yr_to_name_map->second;
-		auto [first_name_bool, last_name_bool] = it_yr_to_name_call_bool_map->second;
-		auto prev_year = prev(it_yr_to_name_map)->first;
 		auto& [prev_first_name_str, prev_last_name_str] = prev(it_yr_to_name_map)->second;
 		auto [prev_first_name_bool, prev_last_name_bool] = prev(it_yr_to_name_call_bool_map)->second;
 
 #ifdef DEBUG_ON
 	cout << "Before: try_change_first_name" << endl;
-	cout << year << " : first name = " << first_name_str << ", last name = " << last_name_str << endl;
-	cout << year << " : first name function called? = " << first_name_bool << ", last name function called? = " << last_name_bool << endl;
-	cout << prev_year << " : prev first name = " << prev_first_name_str << ", prev last name = " << prev_last_name_str << endl;
-	cout << prev_year << " : prev first name function called? = " << prev_first_name_bool << ", prev last name function called? = " << prev_last_name_bool << endl;
+	try_change_debug_trace(it_yr_to_name_map, it_yr_to_name_call_bool_map);
 #endif
 		if(!prev_last_name_bool || prev_last_name_str.empty()) {
 #ifdef DEBUG_ON
-			cout << "try_change_last_name: " << year << " Parent string is empty or ChangeLastName not called before" << endl;
+			cout << __FUNCTION__ << ": " << year << "Parent string is empty or ChangeLastName not called before" << endl;
 #endif
 			prev_last_name_str = last_name_str;
 		}
 
 #ifdef DEBUG_ON
-	cout << "After: try_change_last_name" << endl;
-	cout << year << " : first name = " << first_name_str << ", last name = " << last_name_str << endl;
-	cout << year << " : first name function called? = " << first_name_bool << ", last name function called? = " << last_name_bool << endl;
-	cout << prev_year << " : prev first name = " << prev_first_name_str << ", prev last name = " << prev_last_name_str << endl;
-	cout << prev_year << " : prev first name function called? = " << prev_first_name_bool << ", prev last name function called? = " << prev_last_name_bool << endl;
+	cout << "After:" << __FUNCTION__ << endl;
+	try_change_debug_trace(it_yr_to_name_map, it_yr_to_name_call_bool_map);
 #endif
 		return true;
 	}
@@ -140,7 +137,7 @@ public:
 #ifdef DEBUG_ON
 	  cout << "ChangeFirstName for " << year << endl;
 #endif
-	   addFirstNameToMaps(year, first_name);
+	  addNameToMap(year, first_name, true);
 
 	   // iterator to next smallest key (year)
 	   auto it_yr_to_name_map = yr_to_name_map.upper_bound(year);
@@ -164,7 +161,7 @@ public:
 
 	   } while(it_yr_to_name_map != yr_to_name_map.begin() &&
 			   it_yr_to_name_call_bool_map != yr_to_name_call_bool_map.begin() &&
-			   did_try_change_fail);
+			   !did_try_change_fail);
    }
 
    void ChangeLastName (int year, const string& last_name) {
@@ -172,14 +169,14 @@ public:
 #ifdef DEBUG_ON
 	  cout << "ChangeLastName for " << year << endl;
 #endif
-	   addLastNameToMaps(year, last_name);
+	  addNameToMap(year, last_name, false);
 
 	   // iterator to next smallest key (year)
 	   auto it_yr_to_name_map = yr_to_name_map.upper_bound(year);
 	   auto it_yr_to_name_call_bool_map = yr_to_name_call_bool_map.upper_bound(year);
 
 #ifdef DEBUG_ON
-	   cout << "first try_change_lst_name()" << endl;
+	   cout << "first try_change_first_name()" << endl;
 #endif
 
 	   bool did_try_change_fail = false;
@@ -197,7 +194,7 @@ public:
 
 	   } while(it_yr_to_name_map != yr_to_name_map.begin() &&
 			   it_yr_to_name_call_bool_map != yr_to_name_call_bool_map.begin() &&
-			   did_try_change_fail);
+			   !did_try_change_fail);
    }
 
    string GetFullName (int year) {
@@ -230,28 +227,28 @@ private:
 };
 
 int main() {
-//	{
-//		Person person;
-//
-//		person.ChangeFirstName(1965, "Polina");
-//		person.ChangeLastName(1967, "Sergeeva");
-//
-//		assert("Incognito" == person.GetFullName(1900));
-//		assert("Polina with unknown last name" == person.GetFullName(1965));
-//		cout << person.GetFullName(1990) << endl;
-//		assert("Polina Sergeeva" == person.GetFullName(1990));
-//
-//		person.ChangeFirstName(1970, "Appolinaria");
-//
-//		assert("Polina Sergeeva" == person.GetFullName(1969));
-//		assert("Appolinaria Sergeeva" == person.GetFullName(1970));
-//
-//		person.ChangeLastName(1968, "Volkova");
-//
-//		assert("Polina Volkova" == person.GetFullName(1969));
-//		assert("Appolinaria Volkova" == person.GetFullName(1970));
-//
-//	}
+	{
+		Person person;
+
+		person.ChangeFirstName(1965, "Polina");
+		person.ChangeLastName(1967, "Sergeeva");
+
+		assert("Incognito" == person.GetFullName(1900));
+		assert("Polina with unknown last name" == person.GetFullName(1965));
+		cout << person.GetFullName(1990) << endl;
+		assert("Polina Sergeeva" == person.GetFullName(1990));
+
+		person.ChangeFirstName(1970, "Appolinaria");
+
+		assert("Polina Sergeeva" == person.GetFullName(1969));
+		assert("Appolinaria Sergeeva" == person.GetFullName(1970));
+
+		person.ChangeLastName(1968, "Volkova");
+
+		assert("Polina Volkova" == person.GetFullName(1969));
+		assert("Appolinaria Volkova" == person.GetFullName(1970));
+
+	}
 
 	{
 		Person person;
