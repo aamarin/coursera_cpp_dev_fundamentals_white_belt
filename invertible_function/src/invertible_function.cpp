@@ -26,12 +26,30 @@ public:
 		if ( operation == '+' ) {
 			return source_value + value;
 		}
-		else {
-			return source_value - value; }
+		else if( operation == '*' ) {
+			return source_value * value;
+		}
+		else if( operation == '/' ) {
+			return source_value / value;
+		}
+ 		else {
+			return source_value - value;
+ 		}
 	}
 
 	void Invert() {
-		operation = ( operation == '+' ) ? '-' : '+';
+		if ( operation == '+' ) {
+			operation = '-';
+		}
+		else if( operation == '-' ) {
+			operation = '+';
+		}
+		else if(operation == '*') {
+			operation = '/';
+		}
+		else {
+			operation = '*';
+		}
 	}
 
 private:
@@ -48,19 +66,19 @@ public :
 	}
 
 	double Apply ( double value) const {
-		for (const FunctionPart & part : parts) {
-			value = part.Apply (value);
+		for (const auto& part : parts) {
+			value = part.Apply(value);
 		}
 
 		return value;
 	}
 
 	void Invert () {
-		for (FunctionPart & part : parts) {
+		for (auto& part : parts) {
 			part.Invert ();
 		}
 
-		reverse (begin(parts), end(parts));
+		reverse(begin(parts), end(parts));
 	}
 
 private :
@@ -70,7 +88,7 @@ private :
 Function MakeWeightFunction(const Params& params,
                             const Image& image) {
   Function function;
-//  function.AddPart('*', params.a);
+  function.AddPart('*', params.a);
   function.AddPart('-', image.freshness * params.b);
   function.AddPart('+', image.rating * params.c);
   return function;
