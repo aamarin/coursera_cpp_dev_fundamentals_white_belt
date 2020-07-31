@@ -10,17 +10,45 @@ public:
     }
 
     Rational (int numerator, int denominator):
-    _numerator(numerator), _denominator(denominator) {
-      ctor_init();  
+        _numerator(numerator), _denominator(denominator) {
+        ctor_init();  
     }
 
     int Numerator () const {
         // Implement this method
-        return (_numerator * _multiplier)/gcd_val;
+        return _numerator;
     }
 
     int Denominator () const {
-        return _denominator/gcd_val;
+        return _denominator;
+    }
+
+    bool operator== (const Rational& rhs) {
+        return (Numerator() == rhs.Numerator() &&
+                Denominator() == rhs.Denominator());
+    }
+
+    Rational operator+ (const Rational& rhs) const {
+        const auto new_numerator = _gcd_val * (Numerator() + rhs.Numerator());
+        const auto new_denominator = Denominator() * _gcd_val;
+        return Rational(new_numerator, new_denominator);
+    }
+
+    Rational operator- (const Rational& rhs) const {
+        int lcm_val = std::lcm(Denominator(), rhs.Denominator());
+        const auto new_num_mult = lcm_val/Denominator();
+        // cout << "new_num_mult: " << new_num_mult << endl;
+        const auto rhs_new_num_mult = lcm_val/rhs.Denominator();
+        // cout << "rhs_new_num_mult: " << rhs_new_num_mult << endl;
+
+        const auto new_num = Numerator() * new_num_mult;
+        // cout << "new_num: " << new_num << endl;
+        const auto rhs_new_num = rhs.Numerator() * rhs_new_num_mult;
+        // cout << "rhs_new_num: " << rhs_new_num << endl;
+        const auto new_numerator = new_num - rhs_new_num;
+        // cout << "operater-: numerator: " << new_numerator << ", denominator: " << lcm_val << endl;
+
+        return Rational(new_numerator, lcm_val);    
     }
 
 private:
@@ -28,7 +56,7 @@ private:
     int _numerator;
     int _denominator;
     int _multiplier;
-    int gcd_val;
+    int _gcd_val;
     int multiplier() const {
         if(_numerator < 0 && _denominator < 0) {
             return 1;
@@ -44,10 +72,15 @@ private:
 
     void ctor_init() {
         _multiplier = multiplier(); 
-        gcd_val = std::gcd(_numerator, _denominator);
+        _gcd_val = std::gcd(_numerator, _denominator);
+        // cout << "Inital: numerator: " << _numerator << ", denominator: " << _denominator 
+        // << ", multiplier: " << _multiplier << ", gcd: " << _gcd_val << endl;
         _denominator = _denominator < 0 ? -1 * _denominator : _denominator;
         _numerator = _numerator < 0 ? -1 * _numerator : _numerator;
-        // cout << "numerator: " << _numerator << ", denominator: " << _denominator << ", multiplier: " << _multiplier << ", gcd: " << gcd_val << endl;
+        _denominator = _denominator / _gcd_val;
+        _numerator = (_numerator * _multiplier)/_gcd_val;
+        // cout << "After: numerator: " << _numerator << ", denominator: " << _denominator 
+        // << ", multiplier: " << _multiplier << ", gcd: " << _gcd_val << endl;
     }
 };
 
@@ -99,7 +132,7 @@ int main() {
             return 5;
         }
     }
-    
+
     {
         Rational r1(4, 6);
         Rational r2(2, 3);
