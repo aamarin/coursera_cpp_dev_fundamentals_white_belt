@@ -37,18 +37,27 @@ public:
     Rational operator- (const Rational& rhs) const {
         int lcm_val = std::lcm(Denominator(), rhs.Denominator());
         const auto new_num_mult = lcm_val/Denominator();
-        // cout << "new_num_mult: " << new_num_mult << endl;
         const auto rhs_new_num_mult = lcm_val/rhs.Denominator();
-        // cout << "rhs_new_num_mult: " << rhs_new_num_mult << endl;
 
         const auto new_num = Numerator() * new_num_mult;
-        // cout << "new_num: " << new_num << endl;
         const auto rhs_new_num = rhs.Numerator() * rhs_new_num_mult;
-        // cout << "rhs_new_num: " << rhs_new_num << endl;
         const auto new_numerator = new_num - rhs_new_num;
+
+        // cout << "new_num_mult: " << new_num_mult << endl; 
+        // cout << "rhs_new_num_mult: " << rhs_new_num_mult << endl;
+        // cout << "new_num: " << new_num << endl;
+        // cout << "rhs_new_num: " << rhs_new_num << endl;
         // cout << "operater-: numerator: " << new_numerator << ", denominator: " << lcm_val << endl;
 
         return Rational(new_numerator, lcm_val);    
+    }
+
+        Rational operator* (const Rational& rhs) const {
+        return Rational(Numerator() * rhs.Numerator(), Denominator() * rhs.Denominator());
+    }
+
+        Rational operator/ (const Rational& rhs) const {
+        return Rational(Numerator() * rhs.Denominator(), Denominator() * rhs.Numerator());
     }
 
 private:
@@ -162,6 +171,28 @@ int main() {
         if (!equal) {
             cout << "5/7 - 2/9 != 31/63" << endl;
             return 3;
+        }
+    }
+
+    {
+        Rational a(2, 3);
+        Rational b(4, 3);
+        Rational c = a * b;
+        bool equal = c == Rational(8, 9);
+        if (!equal) {
+            cout << "2/3 * 4/3 != 8/9" << endl;
+            return 1;
+        }
+    }
+
+    {
+        Rational a(5, 4);
+        Rational b(15, 8);
+        Rational c = a / b;
+        bool equal = c == Rational(2, 3);
+        if (!equal) {
+            cout << "5/4 / 15/8 != 2/3" << endl;
+            return 2;
         }
     }
 
