@@ -4,17 +4,34 @@
 #include <sstream>
 #include <numeric>
 #include <string>
+#include <vector>
+#include <map>
+#include <tuple>
+#include <set>
 
 class Rational {
 public:
-    Rational ():_numerator(0), _denominator(1) {
-        ctor_init();
-    }
+    Rational ():_numerator(0), _denominator(1) {}
 
     Rational (int numerator, int denominator):
         _numerator(numerator), _denominator(denominator) {
-        if(_denominator == 0) _numerator = 1;
-        ctor_init();  
+
+        // no need to reduce further
+        if(_denominator == 0) {
+            _numerator = 1;
+            return;
+        }
+        
+        _multiplier = multiplier(); 
+        _gcd_val = std::gcd(_numerator, _denominator);
+        // std::cout << "Inital: numerator: " << _numerator << ", denominator: " << _denominator 
+        // << ", multiplier: " << _multiplier << ", gcd: " << _gcd_val << std::endl;
+        _denominator = _denominator < 0 ? -1 * _denominator : _denominator;
+        _numerator = _numerator < 0 ? -1 * _numerator : _numerator;
+        _denominator = _denominator / _gcd_val;
+        _numerator = (_numerator * _multiplier)/_gcd_val;
+        // std::cout << "After: numerator: " << _numerator << ", denominator: " << _denominator 
+        // << ", multiplier: " << _multiplier << ", gcd: " << _gcd_val << std::endl;
     }
 
     int Numerator () const {
@@ -26,33 +43,27 @@ public:
         return _denominator;
     }
 
-    bool operator== (const Rational& rhs) {
+    bool operator== (const Rational& rhs) const {
         return (Numerator() == rhs.Numerator() &&
                 Denominator() == rhs.Denominator());
     }
 
+    bool operator< (const Rational& rhs) const {
+        const auto& [curr_lcm_numerator, rhs_lcm_numerator, lcm_denominator] = build_lcm_values(rhs);
+        return curr_lcm_numerator < rhs_lcm_numerator;
+    }
+
     Rational operator+ (const Rational& rhs) const {
-        const auto new_numerator = _gcd_val * (Numerator() + rhs.Numerator());
-        const auto new_denominator = Denominator() * _gcd_val;
-        return Rational(new_numerator, new_denominator);
+        const auto& [curr_lcm_numerator, rhs_lcm_numerator, lcm_denominator] = build_lcm_values(rhs);
+        const auto new_numerator = curr_lcm_numerator + rhs_lcm_numerator;
+        return Rational(new_numerator, lcm_denominator);
     }
 
     Rational operator- (const Rational& rhs) const {
-        int lcm_val = std::lcm(Denominator(), rhs.Denominator());
-        const auto new_num_mult = lcm_val/Denominator();
-        const auto rhs_new_num_mult = lcm_val/rhs.Denominator();
+        const auto& [curr_lcm_numerator, rhs_lcm_numerator, lcm_denominator] = build_lcm_values(rhs);
+        const auto new_numerator = curr_lcm_numerator - rhs_lcm_numerator;
 
-        const auto new_num = Numerator() * new_num_mult;
-        const auto rhs_new_num = rhs.Numerator() * rhs_new_num_mult;
-        const auto new_numerator = new_num - rhs_new_num;
-
-        // std::cout << "new_num_mult: " << new_num_mult << std::endl; 
-        // std::cout << "rhs_new_num_mult: " << rhs_new_num_mult << std::endl;
-        // std::cout << "new_num: " << new_num << std::endl;
-        // std::cout << "rhs_new_num: " << rhs_new_num << std::endl;
-        // std::cout << "operater-: numerator: " << new_numerator << ", denominator: " << lcm_val << std::endl;
-
-        return Rational(new_numerator, lcm_val);    
+        return Rational(new_numerator, lcm_denominator);    
     }
 
         Rational operator* (const Rational& rhs) const {
@@ -69,6 +80,24 @@ private:
     int _denominator;
     int _multiplier;
     int _gcd_val;
+
+    std::tuple<int, int, int> build_lcm_values(const Rational& rhs) const {
+        int lcm_val = std::lcm(Denominator(), rhs.Denominator());
+        const auto new_num_mult = lcm_val/Denominator();
+        const auto rhs_new_num_mult = lcm_val/rhs.Denominator();
+
+        const auto new_num = Numerator() * new_num_mult;
+        const auto rhs_new_num = rhs.Numerator() * rhs_new_num_mult;
+
+        // std::cout << "new_num_mult: " << new_num_mult << std::endl; 
+        // std::cout << "rhs_new_num_mult: " << rhs_new_num_mult << std::endl;
+        // std::cout << "new_num: " << new_num << std::endl;
+        // std::cout << "rhs_new_num: " << rhs_new_num << std::endl;
+        // std::cout << "operater-: numerator: " << new_numerator << ", denominator: " << lcm_val << std::endl;
+
+        return std::make_tuple(new_num, rhs_new_num, lcm_val);
+    }
+
     int multiplier() const {
         if(_numerator < 0 && _denominator < 0) {
             return 1;
@@ -81,33 +110,48 @@ private:
         // both positive
         return 1;
     }
-
-    void ctor_init() {
-        _multiplier = multiplier(); 
-        _gcd_val = std::gcd(_numerator, _denominator);
-        // std::cout << "Inital: numerator: " << _numerator << ", denominator: " << _denominator 
-        // << ", multiplier: " << _multiplier << ", gcd: " << _gcd_val << std::endl;
-        _denominator = _denominator < 0 ? -1 * _denominator : _denominator;
-        _numerator = _numerator < 0 ? -1 * _numerator : _numerator;
-        _denominator = _denominator / _gcd_val;
-        _numerator = (_numerator * _multiplier)/_gcd_val;
-        // std::cout << "After: numerator: " << _numerator << ", denominator: " << _denominator 
-        // << ", multiplier: " << _multiplier << ", gcd: " << _gcd_val << std::endl;
-    }
 };
 
 std::istream& operator>> (std::istream& stream, Rational& rational) {
-    if(stream.peek() == std::char_traits<char>::eof()) {
+    // EOF check helps catch empty stream condition
+    if (!stream || stream.eof() || stream.fail()) {
         return stream;
     }
 
+    // std::cout << "Peek: " << stream.peek() << std::endl;
     int numerator = 0;
     stream >> numerator;
 
-    stream.ignore(1); 
+    // workaround if the next char is a space
+    // might want to consider more than 1 whitespace case
+    if(stream.peek() == ' ') {
+        stream.ignore(1);
+    }
+
+    if(stream.peek() != '/' || stream.fail()) {
+        stream.clear();
+        stream.ignore(1);
+        //rational = Rational(0, 1);
+        return stream;
+    } else {
+        stream.ignore(1);         
+    }
+
+
+    // workaround if the next char is a space
+    // might want to consider more than 1 whitespace case
+    if(stream.peek() == ' ') {
+        return stream;
+    }
 
     int denominator = 0;
     stream >> denominator;
+
+    if(stream.fail()) {
+        stream.clear();
+        stream.ignore(1);
+        return stream;
+    } 
 
     rational = Rational(numerator, denominator);
     return stream; 
@@ -190,6 +234,39 @@ int main() {
     }
 
     {
+        Rational a(2, -3);
+        Rational b(4, 3);
+        Rational c = a + b;
+        bool equal = c == Rational(2, 3);
+        if (!equal) {
+            std::cout << "2/-3 + 4/3 != 2/3" << std::endl;
+            return 2;
+        }
+    }
+
+    {
+        Rational a(-1, -2);
+        Rational b(1, 2);
+        Rational c = a + b;
+        bool equal = c == Rational(1, 1);
+        if (!equal) {
+            std::cout << "-1/-2 + 1/2 != 1" << std::endl;
+            return 2;
+        }
+    }
+
+    {
+        Rational a(-1, 2);
+        Rational b(1, 2);
+        Rational c = a + b;
+        bool equal = c == Rational(0, 2);
+        if (!equal) {
+            std::cout << "-1/2 + 1/2 != 0" << std::endl;
+            return 2;
+        }
+    }
+
+    {
         Rational a(5, 7);
         Rational b(2, 9);
         Rational c = a - b;
@@ -197,6 +274,47 @@ int main() {
         if (!equal) {
             std::cout << "5/7 - 2/9 != 31/63" << std::endl;
             return 3;
+        }
+    }
+
+    {
+        Rational a(1, 2);
+        Rational b(1, 2);
+        Rational c = a + b;
+        bool equal = c == Rational(1, 1);
+        if (!equal) {
+            std::cout << "1/2 - 1/2 != 1" << std::endl;
+            return 3;
+        }
+    }
+
+    {
+        Rational a(1, 2);
+        Rational b(1, 3);
+        Rational c = a + b;
+        bool equal = c == Rational(5, 6);
+        if (!equal) {
+            std::cout << "1/2 + 1/3 != 5/6" << std::endl;
+            return 3;
+        }
+    }
+
+    {
+        Rational a(5, 6);
+        Rational b(1, 4);
+        Rational c = a - b;
+        bool equal = c == Rational(7, 12);
+        if (!equal) {
+            std::cout << "5/6 - 1/4 != 7/12" << std::endl;
+            return 3;
+        }
+    }
+
+    {
+        const Rational r = Rational(1, 2) + Rational(1, 3) - Rational(1, 4);
+        const bool equal = r == Rational(7, 12);
+        if (!equal) {
+            std::cout << "1/2 + 1/3 - 1/4 != 7/12" << std::endl;
         }
     }
 
@@ -243,6 +361,39 @@ int main() {
     }
 
     {
+        std::istringstream input(" 5/7 ");
+        Rational r;
+        input >> r;
+        bool equal = r == Rational(5, 7);
+        if (!equal) {
+            std::cout << "5/7 is incorrectly read as " << r << std::endl;
+            return 2;
+        }
+    }
+
+    {
+        std::istringstream input("5f/8");
+        Rational r;
+        input >> r;
+        bool equal = r == Rational(0, 1);
+        if (!equal) {
+            std::cout << "5f/8 is incorrectly read as " << r << std::endl;
+            return 2;
+        }
+    }
+
+    {
+        std::istringstream input("5%7");
+        Rational r;
+        input >> r;
+        bool equal = r == Rational(0, 1);
+        if (!equal) {
+            std::cout << "5%7 is incorrectly read as " << r << std::endl;
+            return 2;
+        }
+    }
+
+    {
         std::istringstream input("5/7 10/8");
         Rational r1, r2;
         input >> r1 >> r2;
@@ -261,6 +412,86 @@ int main() {
         }
     }
 
+
+    {
+        std::istringstream input("5/f 6/4");
+        Rational r1(3,10), r2;
+        input >> r1;
+        input >> r2;
+        bool equal1 = r1 == Rational(3, 10);
+        bool equal2 = r2 == Rational(3, 2);
+        if (!equal1 || !equal2) {
+            std::cout << "Not 3/10 and 3/2: " << r1 << ' ' << r2 << std::endl;;
+            return 1;
+        }
+    }
+
+    {
+        std::istringstream input("1/2 f");
+        Rational r1, r2(2,5);
+        input >> r1;
+        input >> r2;
+        bool equal1 = r1 == Rational(1, 2);
+        bool equal2 = r2 == Rational(2, 5);
+        if (!equal1 || !equal2) {
+            std::cout << "Not 1/2 and 2/5: " << r1 << ' ' << r2 << std::endl;;
+            return 1;
+        }
+    }
+    {
+        std::istringstream input("1 / 5/6");
+        Rational r1, r2;
+        input >> r1;
+        input >> r2;
+        bool equal1 = r1 == Rational(0, 1);
+        bool equal2 = r2 == Rational(5, 6);
+        if (!equal1 || !equal2) {
+            std::cout << "Not 0/1 and 5/6:" << r1 << ' ' << r2 << std::endl;;
+            return 1;
+        }
+    }
+
+    {
+        std::istringstream input("1/ 6/4");
+        Rational r1(2,5), r2;
+        input >> r1;
+        input >> r2;
+        bool equal1 = r1 == Rational(2, 5);
+        bool equal2 = r2 == Rational(3, 2);
+        if (!equal1 || !equal2) {
+            std::cout << "Not 2/5 and 3/2:" << r1 << ' ' << r2 << std::endl;;
+            return 1;
+        }
+    }
+    {
+        const std::set<Rational> rs = {{1, 2}, {1, 25}, {3, 4}, {3, 4}, {1, 2}};
+        if (rs.size() != 3) {
+            std::cout << "Wrong amount of items in the set" << std::endl;
+            return 1;
+        }
+
+        std::vector<Rational> v;
+        for (auto x : rs) {
+            v.push_back(x);
+        }
+        if (v != std::vector<Rational>{{1, 25}, {1, 2}, {3, 4}}) {
+            std::cout << "Rationals comparison works incorrectly" << std::endl;
+            return 2;
+        }
+    }
+
+    {
+        std::map<Rational, int> count;
+        ++count[{1, 2}];
+        ++count[{1, 2}];
+
+        ++count[{2, 3}];
+
+        if (count.size() != 2) {
+            std::cout << "Wrong amount of items in the map" << std::endl;
+            return 3;
+        }
+    }
     std::cout << "OK" << std::endl;
     return 0;
 }
