@@ -8,6 +8,7 @@
 #include <map>
 #include <tuple>
 #include <set>
+#include <limits>
 
 class Rational {
 public:
@@ -113,48 +114,20 @@ private:
 };
 
 std::istream& operator>> (std::istream& stream, Rational& rational) {
-    // EOF check helps catch empty stream condition
-    if (!stream || stream.eof() || stream.fail()) {
-        return stream;
-    }
+    int numerator = 0, denominator = 0;
+    char delim;
 
-    // std::cout << "Peek: " << stream.peek() << std::endl;
-    int numerator = 0;
-    stream >> numerator;
+    stream >> numerator >> delim >> denominator;
 
-    // workaround if the next char is a space
-    // might want to consider more than 1 whitespace case
-    if(stream.peek() == ' ') {
-        stream.ignore(1);
-    }
-
-    if(stream.peek() != '/' || stream.fail()) {
+    if(!stream || stream.fail() || delim != '/') {
         stream.clear();
-        stream.ignore(1);
-        //rational = Rational(0, 1);
-        return stream;
-    } else {
-        stream.ignore(1);         
-    }
-
-
-    // workaround if the next char is a space
-    // might want to consider more than 1 whitespace case
-    if(stream.peek() == ' ') {
-        return stream;
-    }
-
-    int denominator = 0;
-    stream >> denominator;
-
-    if(stream.fail()) {
-        stream.clear();
+        // std::cout << stream.peek() << std::endl;
         stream.ignore(1);
         return stream;
-    } 
+    }
 
     rational = Rational(numerator, denominator);
-    return stream; 
+    return stream;
 }
 
 std::ostream& operator<< (std::ostream& stream, const Rational& rational) {
@@ -360,36 +333,80 @@ int main() {
         }
     }
 
+    // {
+    //     std::istringstream input(" 2/3 ");
+    //     Rational r;
+    //     input >> r;
+    //     bool equal = r == Rational(2, 3);
+    //     if (!equal) {
+    //         std::cout << "2/3 is incorrectly read as " << r << std::endl;
+    //         return 2;
+    //     }
+    // }
+
     {
-        std::istringstream input(" 5/7 ");
+        std::istringstream input("521 / 321");
         Rational r;
         input >> r;
-        bool equal = r == Rational(5, 7);
+        bool equal = r == Rational(521, 321);
         if (!equal) {
-            std::cout << "5/7 is incorrectly read as " << r << std::endl;
+            std::cout << "521 / 321 is incorrectly read as " << r << std::endl;
             return 2;
         }
     }
 
+    // {
+    //     std::istringstream input("5f/8");
+    //     Rational r;
+    //     input >> r;
+    //     bool equal = r == Rational(0, 1);
+    //     if (!equal) {
+    //         std::cout << "5f/8 is incorrectly read as " << r << std::endl;
+    //         return 2;
+    //     }
+    // }
+
+    // {
+    //     std::istringstream input("5%7");
+    //     Rational r;
+    //     input >> r;
+    //     bool equal = r == Rational(0, 1);
+    //     if (!equal) {
+    //         std::cout << "5%7 is incorrectly read as " << r << std::endl;
+    //         return 2;
+    //     }
+    // }
+
     {
-        std::istringstream input("5f/8");
+        std::istringstream input(",5/7");
         Rational r;
         input >> r;
-        bool equal = r == Rational(0, 1);
-        if (!equal) {
-            std::cout << "5f/8 is incorrectly read as " << r << std::endl;
-            return 2;
+        bool equal1 = r == Rational(0, 1);
+        if (!equal1) {
+            std::cout << "Not 0/1: " << r << std::endl;;
+            return 1;
         }
     }
 
+    // {
+    //     std::istringstream input("+5/-4 1 /");
+    //     Rational r;
+    //     input >> r;
+    //     bool equal1 = r == Rational(-5, 4);
+    //     if (!equal1) {
+    //         std::cout << "Not -5/4: " << r << std::endl;;
+    //         return 1;
+    //     }
+    // }
+
     {
-        std::istringstream input("5%7");
+        std::istringstream input("");
         Rational r;
         input >> r;
-        bool equal = r == Rational(0, 1);
-        if (!equal) {
-            std::cout << "5%7 is incorrectly read as " << r << std::endl;
-            return 2;
+        bool equal1 = r == Rational(0, 1);
+        if (!equal1) {
+            std::cout << "Not 0/1: " << r << std::endl;;
+            return 1;
         }
     }
 
@@ -412,7 +429,6 @@ int main() {
         }
     }
 
-
     {
         std::istringstream input("5/f 6/4");
         Rational r1(3,10), r2;
@@ -422,6 +438,32 @@ int main() {
         bool equal2 = r2 == Rational(3, 2);
         if (!equal1 || !equal2) {
             std::cout << "Not 3/10 and 3/2: " << r1 << ' ' << r2 << std::endl;;
+            return 1;
+        }
+    }
+
+    {
+        std::istringstream input("f /4 , 3/4");
+        Rational r1(3,10), r2;
+        input >> r1;
+        input >> r2;
+        bool equal1 = r1 == Rational(3, 10);
+        bool equal2 = r2 == Rational(0, 1);
+        if (!equal1 || !equal2) {
+            std::cout << "Not 3/10 and 3/4: " << r1 << ' ' << r2 << std::endl;;
+            return 1;
+        }
+    }
+
+    {
+        std::istringstream input("6 /4 , 6/f");
+        Rational r1(3,2), r2;
+        input >> r1;
+        input >> r2;
+        bool equal1 = r1 == Rational(3, 2);
+        bool equal2 = r2 == Rational(0, 1);
+        if (!equal1 || !equal2) {
+            std::cout << "Not 3/2 and 0/1: " << r1 << ' ' << r2 << std::endl;;
             return 1;
         }
     }
@@ -439,14 +481,14 @@ int main() {
         }
     }
     {
-        std::istringstream input("1 / 5/6");
+        std::istringstream input("5/7 10/8, 3/4");
         Rational r1, r2;
         input >> r1;
         input >> r2;
-        bool equal1 = r1 == Rational(0, 1);
-        bool equal2 = r2 == Rational(5, 6);
+        bool equal1 = r1 == Rational(5, 7);
+        bool equal2 = r2 == Rational(5, 4);
         if (!equal1 || !equal2) {
-            std::cout << "Not 0/1 and 5/6:" << r1 << ' ' << r2 << std::endl;;
+            std::cout << "Not 5/7 and 5/4:" << r1 << ' ' << r2 << std::endl;;
             return 1;
         }
     }
