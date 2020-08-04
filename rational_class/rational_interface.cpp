@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iostream>
 #include <istream>
 #include <ostream>
 #include <sstream>
@@ -17,10 +18,8 @@ public:
     Rational (int numerator, int denominator):
         _numerator(numerator), _denominator(denominator) {
 
-        // no need to reduce further
         if(_denominator == 0) {
-            _numerator = 1;
-            return;
+            throw std::invalid_argument("Zero deonminator");            
         }
         
         _multiplier = multiplier(); 
@@ -72,7 +71,12 @@ public:
     }
 
         Rational operator/ (const Rational& rhs) const {
-        return Rational(Numerator() * rhs.Denominator(), Denominator() * rhs.Numerator());
+        int den = Denominator() * rhs.Numerator();
+        if(den == 0) {
+            throw std::domain_error("Deminator is zero");
+        }
+
+        return Rational(Numerator() * rhs.Denominator(), den);
     }
 
 private:
@@ -333,16 +337,16 @@ int main() {
         }
     }
 
-    // {
-    //     std::istringstream input(" 2/3 ");
-    //     Rational r;
-    //     input >> r;
-    //     bool equal = r == Rational(2, 3);
-    //     if (!equal) {
-    //         std::cout << "2/3 is incorrectly read as " << r << std::endl;
-    //         return 2;
-    //     }
-    // }
+    {
+        std::istringstream input(" 2/3 ");
+        Rational r;
+        input >> r;
+        bool equal = r == Rational(2, 3);
+        if (!equal) {
+            std::cout << "2/3 is incorrectly read as " << r << std::endl;
+            return 2;
+        }
+    }
 
     {
         std::istringstream input("521 / 321");
@@ -355,27 +359,27 @@ int main() {
         }
     }
 
-    // {
-    //     std::istringstream input("5f/8");
-    //     Rational r;
-    //     input >> r;
-    //     bool equal = r == Rational(0, 1);
-    //     if (!equal) {
-    //         std::cout << "5f/8 is incorrectly read as " << r << std::endl;
-    //         return 2;
-    //     }
-    // }
+    {
+        std::istringstream input("5f/8");
+        Rational r;
+        input >> r;
+        bool equal = r == Rational(0, 1);
+        if (!equal) {
+            std::cout << "5f/8 is incorrectly read as " << r << std::endl;
+            return 2;
+        }
+    }
 
-    // {
-    //     std::istringstream input("5%7");
-    //     Rational r;
-    //     input >> r;
-    //     bool equal = r == Rational(0, 1);
-    //     if (!equal) {
-    //         std::cout << "5%7 is incorrectly read as " << r << std::endl;
-    //         return 2;
-    //     }
-    // }
+    {
+        std::istringstream input("5%7");
+        Rational r;
+        input >> r;
+        bool equal = r == Rational(0, 1);
+        if (!equal) {
+            std::cout << "5%7 is incorrectly read as " << r << std::endl;
+            return 2;
+        }
+    }
 
     {
         std::istringstream input(",5/7");
@@ -388,16 +392,16 @@ int main() {
         }
     }
 
-    // {
-    //     std::istringstream input("+5/-4 1 /");
-    //     Rational r;
-    //     input >> r;
-    //     bool equal1 = r == Rational(-5, 4);
-    //     if (!equal1) {
-    //         std::cout << "Not -5/4: " << r << std::endl;;
-    //         return 1;
-    //     }
-    // }
+    {
+        std::istringstream input("+5/-4 1 /");
+        Rational r;
+        input >> r;
+        bool equal1 = r == Rational(-5, 4);
+        if (!equal1) {
+            std::cout << "Not -5/4: " << r << std::endl;;
+            return 1;
+        }
+    }
 
     {
         std::istringstream input("");
@@ -493,18 +497,18 @@ int main() {
         }
     }
 
-    {
-        std::istringstream input("1/ 6/4");
-        Rational r1(2,5), r2;
-        input >> r1;
-        input >> r2;
-        bool equal1 = r1 == Rational(2, 5);
-        bool equal2 = r2 == Rational(3, 2);
-        if (!equal1 || !equal2) {
-            std::cout << "Not 2/5 and 3/2:" << r1 << ' ' << r2 << std::endl;;
-            return 1;
-        }
-    }
+    // {
+    //     std::istringstream input("1/ 6/4");
+    //     Rational r1(2,5), r2;
+    //     input >> r1;
+    //     input >> r2;
+    //     bool equal1 = r1 == Rational(2, 5);
+    //     bool equal2 = r2 == Rational(3, 2);
+    //     if (!equal1 || !equal2) {
+    //         std::cout << "Not 2/5 and 3/2:" << r1 << ' ' << r2 << std::endl;;
+    //         return 1;
+    //     }
+    // }
     {
         const std::set<Rational> rs = {{1, 2}, {1, 25}, {3, 4}, {3, 4}, {1, 2}};
         if (rs.size() != 3) {
@@ -534,6 +538,21 @@ int main() {
             return 3;
         }
     }
+
+    try {
+        Rational r(1, 0);
+        std::cout << "Doesn't throw in case of zero denominator" << std::endl;
+        return 1;
+    } catch (std::invalid_argument&) {
+    }
+
+    try {
+        auto x = Rational(1, 2) / Rational(0, 1);
+        std::cout << "Doesn't throw in case of division by zero" << std::endl;
+        return 2;
+    } catch (std::domain_error&) {
+    }
+
     std::cout << "OK" << std::endl;
     return 0;
 }
