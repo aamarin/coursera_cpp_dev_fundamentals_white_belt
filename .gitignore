@@ -1,1 +1,5 @@
 /.metadata/
+*.a
+*.DSYM/
+*.vscode/
+*.DS_Store
