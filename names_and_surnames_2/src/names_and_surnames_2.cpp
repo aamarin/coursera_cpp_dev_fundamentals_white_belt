@@ -74,6 +74,14 @@ string FindFullNameWithHistoryByYear (const map <int, string> & names, int year)
 
 class Person {
 public:
+
+  Person() = delete;
+  explicit Person(const string& first_name, const string& last_name, const int year):
+  _first_name(first_name),_last_name(last_name),_year(year) {
+    ChangeFirstName(year, first_name);
+    ChangeLastName(year, last_name);
+  }
+
   void ChangeFirstName(int year, const string& first_name) {
     first_names[year] = first_name;
   }
@@ -81,7 +89,12 @@ public:
     last_names[year] = last_name;
   }
 
-string GetFullName (int year) {
+string GetFullName (int year) const {
+
+    if(year < _year) {
+      return "No person";
+    }
+
     // get first and last name as of year year
     const string first_name = FindNameByYear (first_names, year);
     const string last_name = FindNameByYear (last_names, year);
@@ -104,9 +117,12 @@ string GetFullName (int year) {
     }
   }
 
-  string GetFullNameWithHistory(int year) {
+  string GetFullNameWithHistory(int year) const {
+    if(year < _year) {
+      return "No person";
+    }
 
-	// get first and last name as of year year
+	  // get first and last name as of year year
     const string first_name = FindFullNameWithHistoryByYear(first_names, year);
     const string last_name = FindFullNameWithHistoryByYear(last_names, year);
     string full_name;
@@ -132,70 +148,84 @@ string GetFullName (int year) {
   }
 
 private:
+  string _first_name;
+  string _last_name;
+  int _year;
   map<int, string> first_names;
   map<int, string> last_names;
 };
 
 int main() {
 
-	{
-			Person person;
+  Person person("Polina", "Sergeeva", 1960);
+  assert("No person" == person.GetFullNameWithHistory(1959));
+  assert("Polina Sergeeva" == person.GetFullNameWithHistory(1960));
 
-			person.ChangeFirstName(1900, "Eugene");
-			person.ChangeLastName(1900, "Sokolov");
-			person.ChangeLastName(1910, "Sokolov");
-			person.ChangeFirstName(1920, "Evgeny");
-			person.ChangeLastName(1930, "Sokolov");
-			assert("Evgeny (Eugene) Sokolov" == person.GetFullNameWithHistory(1940));
-	}
+  person.ChangeFirstName(1965, "Appolinaria");
+  person.ChangeLastName(1967, "Ivanova");
+  assert("Appolinaria (Polina) Sergeeva" == person.GetFullNameWithHistory(1965));
+  assert("Appolinaria (Polina) Ivanova (Sergeeva)" == person.GetFullNameWithHistory(1967));
 
-	{
-			Person person;
+  // Default constructor removed 
+
+	// {
+	// 		Person person;
+
+	// 		person.ChangeFirstName(1900, "Eugene");
+	// 		person.ChangeLastName(1900, "Sokolov");
+	// 		person.ChangeLastName(1910, "Sokolov");
+	// 		person.ChangeFirstName(1920, "Evgeny");
+	// 		person.ChangeLastName(1930, "Sokolov");
+	// 		assert("Evgeny (Eugene) Sokolov" == person.GetFullNameWithHistory(1940));
+	// }
+
+	// {
+	// 		Person person;
 			
-			person.ChangeFirstName(1965, "Polina");
-			person.ChangeLastName(1967, "Sergeeva");
+	// 		person.ChangeFirstName(1965, "Polina");
+	// 		person.ChangeLastName(1967, "Sergeeva");
 
-			assert("Incognito" == person.GetFullNameWithHistory(1900));
-			assert("Polina with unknown last name" == person.GetFullNameWithHistory(1965));
-			assert("Polina Sergeeva" == person.GetFullNameWithHistory(1990));
+	// 		assert("Incognito" == person.GetFullNameWithHistory(1900));
+	// 		assert("Polina with unknown last name" == person.GetFullNameWithHistory(1965));
+	// 		assert("Polina Sergeeva" == person.GetFullNameWithHistory(1990));
 
-			person.ChangeFirstName(1970, "Appolinaria");
-			assert("Polina Sergeeva" == person.GetFullNameWithHistory(1969));
-			assert("Appolinaria (Polina) Sergeeva" == person.GetFullNameWithHistory(1970));
+	// 		person.ChangeFirstName(1970, "Appolinaria");
+	// 		assert("Polina Sergeeva" == person.GetFullNameWithHistory(1969));
+	// 		assert("Appolinaria (Polina) Sergeeva" == person.GetFullNameWithHistory(1970));
 			
-			person.ChangeLastName(1968, "Volkova");
-			assert("Polina Volkova (Sergeeva)" == person.GetFullNameWithHistory(1969));
-			assert("Appolinaria (Polina) Volkova (Sergeeva)" == person.GetFullNameWithHistory(1970));
+	// 		person.ChangeLastName(1968, "Volkova");
+	// 		assert("Polina Volkova (Sergeeva)" == person.GetFullNameWithHistory(1969));
+	// 		assert("Appolinaria (Polina) Volkova (Sergeeva)" == person.GetFullNameWithHistory(1970));
 			
-			person.ChangeFirstName(1990, "Polina");
-			person.ChangeLastName(1990, "Volkova-Sergeeva");
-			assert("Polina (Appolinaria, Polina) Volkova-Sergeeva (Volkova, Sergeeva)" ==  person.GetFullNameWithHistory(1990));
+	// 		person.ChangeFirstName(1990, "Polina");
+	// 		person.ChangeLastName(1990, "Volkova-Sergeeva");
+	// 		assert("Polina (Appolinaria, Polina) Volkova-Sergeeva (Volkova, Sergeeva)" ==  person.GetFullNameWithHistory(1990));
 			
-			person.ChangeFirstName(1966, "Pauline");
-			assert("Pauline (Polina) with unknown last name" == person.GetFullNameWithHistory(1966));
+	// 		person.ChangeFirstName(1966, "Pauline");
+	// 		assert("Pauline (Polina) with unknown last name" == person.GetFullNameWithHistory(1966));
 			
-			person.ChangeLastName(1960, "Sergeeva");
-			assert("Sergeeva with unknown first name" == person.GetFullNameWithHistory(1960));
-			assert("Pauline (Polina) Sergeeva" == person.GetFullNameWithHistory(1967));
+	// 		person.ChangeLastName(1960, "Sergeeva");
+	// 		assert("Sergeeva with unknown first name" == person.GetFullNameWithHistory(1960));
+	// 		assert("Pauline (Polina) Sergeeva" == person.GetFullNameWithHistory(1967));
 			
-			person.ChangeLastName(1961, "Ivanova");
-			assert("Pauline (Polina) Sergeeva (Ivanova, Sergeeva)" == person.GetFullNameWithHistory(1967));
-	}
+	// 		person.ChangeLastName(1961, "Ivanova");
+	// 		assert("Pauline (Polina) Sergeeva (Ivanova, Sergeeva)" == person.GetFullNameWithHistory(1967));
+	// }
 
-	{
-		Person person;
+	// {
+	// 	Person person;
 
-		person.ChangeFirstName(1965, "Polina");
-		person.ChangeFirstName(1965, "Appolinaria");
+	// 	person.ChangeFirstName(1965, "Polina");
+	// 	person.ChangeFirstName(1965, "Appolinaria");
 
-		person.ChangeLastName(1965, "Sergeeva");
-		person.ChangeLastName(1965, "Volkova");
-		person.ChangeLastName(1965, "Volkova-Sergeeva");
+	// 	person.ChangeLastName(1965, "Sergeeva");
+	// 	person.ChangeLastName(1965, "Volkova");
+	// 	person.ChangeLastName(1965, "Volkova-Sergeeva");
 
-		assert("Incognito" == person.GetFullNameWithHistory(1964));
-		assert("Appolinaria Volkova-Sergeeva" == person.GetFullNameWithHistory(1965));
-		assert("Appolinaria Volkova-Sergeeva" == person.GetFullNameWithHistory(1966));
-	}
+	// 	assert("Incognito" == person.GetFullNameWithHistory(1964));
+	// 	assert("Appolinaria Volkova-Sergeeva" == person.GetFullNameWithHistory(1965));
+	// 	assert("Appolinaria Volkova-Sergeeva" == person.GetFullNameWithHistory(1966));
+	// }
 
 	return 0;
 }
