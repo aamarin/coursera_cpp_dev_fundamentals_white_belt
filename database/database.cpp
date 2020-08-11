@@ -3,9 +3,11 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include <vector>
 #include <exception>
 #include <tuple>
 #include <iomanip>
+#include <algorithm>
 
 // Implement the functions and methods of the classes and add your own if necessary
 using namespace std;
@@ -75,7 +77,7 @@ ostream& operator<<(ostream& stream, const Date& date) {
 
   stream << setw(4) << date.GetYear() << "-" 
   << setw(2) << date.GetMonth() << "-"
-  << setw(2) << date.GetDay() << endl;
+  << setw(2) << date.GetDay();
 
   return stream;
 }
@@ -95,21 +97,13 @@ bool operator<(const Date & lhs, const Date & rhs) {
 
 class Database {
 private:
-  std::map< Date, map<string, string> > _map;
+  std::map< Date, std::vector<string> > _map;
 
 public:
   Database() = default;
   
   void AddEvent (const Date & date, const string & event) {
-    auto it = _map.find(date);
-
-    // Don't re-add it
-    if(it == _map.end()) {
-      auto it2 = it->second.find(event);
-      if(it2 != it->second.end()) {
-        it2->second = event;
-      }
-    }
+      _map[date].push_back(event);
   }
 
   bool DeleteEvent (const Date & date, const string & event) {
@@ -118,14 +112,11 @@ public:
 
     if(it != _map.end()) {
 
-     auto& event_map = it->second; 
-     auto it2 = event_map.find(event);
-
-     if(it2 != event_map.end()) {
-
-      event_map.erase(it2);
-      success = true;
-      cout << "Deleted successfully" << endl;
+      auto& event_vect = it->second; 
+      auto it2 = std::find(std::begin(event_vect), std::end(event_vect), event);
+      if(it2 != event_vect.end()) {
+        event_vect.erase(it2);
+        cout << "Deleted successfully" << endl;
      } else {
         success = false;
         cout << "Event not found" << endl;
@@ -143,7 +134,7 @@ public:
       _map.erase(it);
     }//if
 
-    cout << "Deleted" << size << " events";
+    cout << "Deleted " << size << " events" << endl;;
     return size;
   }
 
@@ -151,18 +142,18 @@ public:
     auto it = _map.find(date);
 
     if(it != _map.end()) {
-      for(const auto& [event, dummy] : it->second) {
-        cout << event << endl;
+      for(const auto& e : it->second) {
+        cout << e << endl;
       }//for
     }//if
   }
   
   void Print () const {
-    for(const auto& [date, event_map] : _map) {
+    for(const auto& [date, event_vect] : _map) {
       if(date.GetYear() < 0) continue;
 
-      for(const auto& [event, dummy] : event_map) {
-        cout << date << " " << event << endl;
+      for(const auto& e : event_vect) {
+        cout << date << " " << e << endl;
       }
     }
   }
@@ -175,27 +166,46 @@ int main () {
   while (getline (cin, command)) {
     // Read commands from the ss stream and process each
     try {
+      if(command.empty()) {
+        continue;
+      }
+
       istringstream ss(command);
       string operater;
       Date date;
       string event;
       ss >> operater;
-      
+
+      if(ss.eof()) {
+        return 0;
+      }
+
       if(operater == "Add") {
         ss >> date;
         ss >> event;
         db.AddEvent(date, event);
+
       } else if(operater == "Del") {
         ss >> date;
-        ss >> event;
-        db.DeleteDate(date);
+
+        if(ss.peek() == -1) {
+           db.DeleteDate(date);
+        } else {
+           ss >> event;
+           db.DeleteEvent(date, event);
+        }
+       
+
+       
 
         // can peek eof or fail be the conditional to delete event?
       } else if(operater == "Find") {
         ss >> date;
         db.Find(date);
+
       } else if(operater == "Print") {
         db.Print();
+
       } else {
         throw invalid_argument("Unknown command: " + operater);
       }
