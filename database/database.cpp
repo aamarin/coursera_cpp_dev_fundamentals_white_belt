@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <exception>
+#include <system_error>
 #include <tuple>
 #include <iomanip>
 #include <algorithm>
@@ -51,18 +52,35 @@ istream& operator>>(istream& stream, Date& date) {
     return stream;
   }
 
+  const int stream_buf_pos = stream.tellg();
   int year = 0, month = 0, day = 0;
   char delimieter1 = ' ', delimieter2 = ' ';
 
   stream >> year >> delimieter1 >> month >> delimieter2 >> day;
 
-  if(stream.fail()) {
-    // Probably needs to print
-    throw invalid_argument("Invalid argument");
-  } else if(month <= 0 && month > 12) {
+  if(stream.fail() || delimieter1 != '-' || delimieter2 != '-') {
+    string output;
+    stream.clear();
+    stream.seekg(stream_buf_pos);
+    stream >> output;
+    throw invalid_argument("Wrong date format: " + output);
+  }
+
+  auto peek = stream.peek();
+
+  if((peek != -1 && peek != ' ')) {
+    string output;
+    stream.clear();
+    stream.seekg(stream_buf_pos);
+    stream >> output;
+    throw invalid_argument("Wrong date format: " + output);
+
+  } else if(month < 1 || month > 12) {
     throw invalid_argument("Month value is invalid: " + std::to_string(month));
-  } else if(day < 1 && day > 31) {
-    throw invalid_argument("Day is the invalid: " + std::to_string(day));
+
+  } else if(day < 1 || day > 31) {
+    throw invalid_argument("Day value is invalid: " + std::to_string(day));
+
   } else {
     date.SetDay(day);
     date.SetMonth(month);
@@ -103,7 +121,18 @@ public:
   Database() = default;
   
   void AddEvent (const Date & date, const string & event) {
-      _map[date].push_back(event);
+    auto it = _map.find(date);
+
+    //if(it == _map.end()) {
+      auto& vect = _map[date];
+
+      auto it2 = find(vect.begin(), vect.end(), event);
+
+      if(it2 == vect.end())
+        vect.push_back(event);
+
+      sort(vect.begin(), vect.end());
+    //}
   }
 
   bool DeleteEvent (const Date & date, const string & event) {
@@ -115,13 +144,18 @@ public:
       auto& event_vect = it->second; 
       auto it2 = std::find(std::begin(event_vect), std::end(event_vect), event);
       if(it2 != event_vect.end()) {
+        success = true;
         event_vect.erase(it2);
-        cout << "Deleted successfully" << endl;
      } else {
         success = false;
-        cout << "Event not found" << endl;
      }
     }//if
+
+    if(success) {
+      cout << "Deleted successfully" << endl;
+    } else {
+      cout << "Event not found" << endl;
+    }
 
     return success;
   }
@@ -149,7 +183,7 @@ public:
   }
   
   void Print () const {
-    for(const auto& [date, event_vect] : _map) {
+    for(auto& [date, event_vect] : _map) {
       if(date.GetYear() < 0) continue;
 
       for(const auto& e : event_vect) {
@@ -176,13 +210,14 @@ int main () {
       string event;
       ss >> operater;
 
-      if(ss.eof()) {
-        return 0;
-      }
-
       if(operater == "Add") {
         ss >> date;
         ss >> event;
+
+        if(event.empty()) {
+          throw invalid_argument("Invalid argument: " + command);
+        }
+
         db.AddEvent(date, event);
 
       } else if(operater == "Del") {
@@ -194,11 +229,7 @@ int main () {
            ss >> event;
            db.DeleteEvent(date, event);
         }
-       
 
-       
-
-        // can peek eof or fail be the conditional to delete event?
       } else if(operater == "Find") {
         ss >> date;
         db.Find(date);
@@ -211,60 +242,10 @@ int main () {
       }
     } catch(exception& e) {
       cout << e.what() << endl;
+      return 0;
     }
 
   }// while
 
   return 0;
 }
-
-// int main() {
-
-// Database db;
-
-// {
-//   istringstream ss("Add 0-1-2 event1");
-//   string operation;
-//   string event;
-//   Date date;
-//   ss >> operation >> date >> event;
-//   assert(operation == "Add");
-
-//   db.AddEvent(date, event);
-//   db.Find()
-// }
-
-// {
-// "Add 1-2-3 event2"
-// }
-
-// {
-// "Find 0-1-2"
-// }
-
-// {
-// "Del 0-1-2"
-// }
-
-// {
-// "Print"
-// }
-
-// {
-// "Del 1-2-3 event2"
-// }
-
-// {
-// "Add 0-13-32 event1"
-// }
-
-// // Output
-// "event1"
-// "Deleted 1 events"
-// "0001-02-03 event2"
-// "Deleted successfully"
-// "Event not found"
-// "Month value is invalid: 13"
-
-//   return 0;
-// }
